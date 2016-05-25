@@ -5,6 +5,8 @@ import controlP5.*;
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 
+import hypermedia.net.*;
+
 String version = "2.0.1";
 
 public Boolean debugMode = false;
@@ -42,6 +44,11 @@ int height = 570;
 
 float maxLevel = 0;
 float goalMaxLevel=0;
+
+UDP udp;
+String[] udpMessages;
+int udpIndex = 0;
+
 void settings() {
   size(width, height);
 }
@@ -55,12 +62,19 @@ void setup() {
   bdFreq = new BeatDetect(in.bufferSize(), in.sampleRate());
   bdSound = new BeatDetect();
 
+  udp = new UDP(this);
+  udp.log(false);
+  udp.broadcast(true);
+  udpMessages = new String[3];
+  udpMessages[0] = "aaa000000\n";
+  udpMessages[1] = "000aaa000\n";
+  udpMessages[2] = "000000aaa\n";
 
   colorMode(HSB, 360, 100, 100);
 
   initControls();
-  if (! debugMode)
-    checkForUpdate();
+  //if (! debugMode)
+  //  checkForUpdate();
 }
 
 
@@ -72,6 +86,11 @@ void draw() {
   noStroke();
 
   drawBeatBoard();
+
+  if (bdFreq.isKick()) {
+    udpIndex = (udpIndex + 1) % 3;
+    udp.send(udpMessages[udpIndex], "192.168.1.255", 2390);
+  }
 
   if (effectArray!=null) {
     for (Effect e : effectArray)
