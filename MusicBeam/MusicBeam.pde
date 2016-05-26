@@ -87,10 +87,7 @@ void draw() {
 
   drawBeatBoard();
 
-  if (bdFreq.isKick()) {
-    udpIndex = (udpIndex + 1) % 3;
-    udp.send(udpMessages[udpIndex], "192.168.1.255", 2390);
-  }
+  refreshLeds();
 
   if (effectArray!=null) {
     for (Effect e : effectArray)
@@ -121,6 +118,15 @@ void controlEvent(ControlEvent event)
 {
   if (event.getName()=="next")
     nextRandom();
+}
+
+void refreshLeds()
+{
+  if (getLevel()>minLevelSlider.getValue()&&bdFreq.isKick())
+  {
+    udpIndex = (udpIndex + 1) % 3;
+    udp.send(udpMessages[udpIndex], "192.168.1.255", 2390);
+  }
 }
 
 void drawBeatBoard()
