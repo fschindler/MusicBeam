@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.awt.Color;
 
 import controlP5.*;
 
@@ -46,8 +47,9 @@ float maxLevel = 0;
 float goalMaxLevel=0;
 
 UDP udp;
-String[] udpMessages;
-int udpIndex = 0;
+
+int ledHue = 0;
+float ledBrightness = 0;
 
 void settings() {
   size(width, height);
@@ -63,12 +65,8 @@ void setup() {
   bdSound = new BeatDetect();
 
   udp = new UDP(this);
-  udp.log(false);
+  udp.log(true);
   udp.broadcast(true);
-  udpMessages = new String[3];
-  udpMessages[0] = "aaa000000\n";
-  udpMessages[1] = "000aaa000\n";
-  udpMessages[2] = "000000aaa\n";
 
   colorMode(HSB, 360, 100, 100);
 
@@ -87,8 +85,6 @@ void draw() {
 
   drawBeatBoard();
 
-  refreshLeds();
-
   if (effectArray!=null) {
     for (Effect e : effectArray)
       e.hideControls();
@@ -102,6 +98,8 @@ void draw() {
       nextRandom();
     } else if (randomToggle.getState())
       randomTimer++;
+
+  refreshLeds();
 }
 
 void nextRandom()
@@ -122,11 +120,17 @@ void controlEvent(ControlEvent event)
 
 void refreshLeds()
 {
-  if (getLevel()>minLevelSlider.getValue()&&bdFreq.isKick())
+  ledBrightness = ledBrightness + 0.01 % 360;
+
+  if (isKick() && isOnset() || isOnset())
   {
-    udpIndex = (udpIndex + 1) % 3;
-    udp.send(udpMessages[udpIndex], "192.168.1.255", 2390);
+    ledHue = ledHue + 60 % 360;
   }
+
+  int c = Color.HSBtoRGB(ledHue / 360.0, 1.0, (sin(ledBrightness) + 1) / 2);
+  byte[] buffer = {byte(c >> 16), byte(c >> 8), byte(c)};
+
+  udp.send(buffer, "192.168.1.255", 2390);
 }
 
 void drawBeatBoard()
